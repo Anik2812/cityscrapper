@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Cityscape Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            overflow: hidden;
+        }
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        button, input {
+            margin: 5px 0;
+            padding: 5px 10px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+        <button id="addBuilding">Add Building</button>
+        <button id="clearCity">Clear City</button>
+        <input type="color" id="colorPicker" value="#00ff00">
+    </div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const addBuildingBtn = document.getElementById('addBuilding');
+        const clearCityBtn = document.getElementById('clearCity');
+        const colorPicker = document.getElementById('colorPicker');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let buildings = [];
+
+        class Building {
+            constructor(x, width, height, color) {
+                this.x = x;
+                this.width = width;
+                this.height = height;
+                this.color = color;
+                this.windows = [];
+                this.generateWindows();
+            }
+
+            generateWindows() {
+                const rows = Math.floor(this.height / 30);
+                const cols = Math.floor(this.width / 30);
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        if (Math.random() > 0.3) {
+                            this.windows.push({
+                                x: this.x + j * 30 + 5,
+                                y: canvas.height - this.height + i * 30 + 5,
+                                on: Math.random() > 0.5
+                            });
+                        }
+                    }
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, canvas.height - this.height, this.width, this.height);
+                
+                this.windows.forEach(window => {
+                    ctx.fillStyle = window.on ? 'rgba(255, 255, 200, 0.8)' : 'rgba(50, 50, 50, 0.8)';
+                    ctx.fillRect(window.x, window.y, 20, 20);
+                });
+            }
+
+            flicker() {
+                this.windows.forEach(window => {
+                    if (Math.random() > 0.99) {
+                        window.on = !window.on;
+                    }
+                });
+            }
+        }
+
+        function addBuilding() {
+            const x = Math.random() * canvas.width;
+            const width = Math.random() * 100 + 50;
+            const height = Math.random() * 300 + 100;
+            const color = colorPicker.value;
+            buildings.push(new Building(x, width, height, color));
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            buildings.forEach(building => {
+                building.draw();
+                building.flicker();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        addBuildingBtn.addEventListener('click', addBuilding);
+        clearCityBtn.addEventListener('click', () => buildings = []);
+
+        for (let i = 0; i < 10; i++) {
+            addBuilding();
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
